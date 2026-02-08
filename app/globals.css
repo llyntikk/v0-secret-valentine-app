@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 100% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 40% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 40% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 346 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 330 60% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 30% 14%;
+    --muted-foreground: 0 10% 60%;
+    --accent: 340 80% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 30% 18%;
+    --input: 0 30% 18%;
+    --ring: 346 100% 50%;
+    --radius: 1rem;
+    --chart-1: 346 100% 50%;
+    --chart-2: 330 60% 40%;
+    --chart-3: 0 80% 60%;
+    --chart-4: 20 90% 65%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Floating hearts animation */
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateY(-100vh) scale(0.5) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 8, 68, 0.4), 0 0 40px rgba(255, 8, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 8, 68, 0.6), 0 0 60px rgba(255, 8, 68, 0.3);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float-up {
+  animation: float-up linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Active tap effect */
+.tap-effect {
+  transition: transform 0.1s ease;
+}
+.tap-effect:active {
+  transform: scale(0.95);
+}

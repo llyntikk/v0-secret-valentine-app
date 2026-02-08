@@ -1,0 +1,9 @@
+{
+  "name": "Secret Valentine",
+  "short_name": "Valentine",
+  "description": "Send and receive anonymous Valentine cards from friends",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#120101",
+  "theme_color": "#ff0844"
+}
