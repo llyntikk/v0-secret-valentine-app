@@ -12,14 +12,14 @@ interface BottomNavProps {
 }
 
 const tabs: { id: Tab; label: string; icon: typeof User }[] = [
-  { id: "profile", label: "Profile", icon: User },
-  { id: "inbox", label: "Inbox", icon: Inbox },
-  { id: "send", label: "Send Love", icon: Heart },
+  { id: "profile", label: "Профиль", icon: User },
+  { id: "inbox", label: "Входящие", icon: Inbox },
+  { id: "send", label: "Отправить", icon: Heart },
 ]
 
 export function BottomNav({ activeTab, onTabChange, inboxCount }: BottomNavProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 glass-strong safe-area-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-40 glass-strong">
       <div className="mx-auto flex max-w-lg items-center">
         {tabs.map((tab) => {
           const Icon = tab.icon
@@ -37,40 +37,30 @@ export function BottomNav({ activeTab, onTabChange, inboxCount }: BottomNavProps
                 <motion.div
                   layoutId="tab-indicator"
                   className="absolute top-0 left-1/2 h-[2px] w-10 -translate-x-1/2 rounded-full"
-                  style={{ background: "linear-gradient(90deg, #ff0844, #ffb199)" }}
+                  style={{ background: "linear-gradient(90deg, #800f2f, #ff4d6d)" }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
-
               <div className="relative">
                 <Icon
                   className={`h-6 w-6 transition-all duration-200 ${
                     isActive
-                      ? tab.id === "send"
-                        ? "fill-[#ff0844] text-[#ff0844] scale-110"
-                        : "text-[#ff0844] scale-110"
+                      ? tab.id === "send" ? "fill-[#ff4d6d] text-[#ff4d6d] scale-110" : "text-[#ff4d6d] scale-110"
                       : "text-white/30"
                   }`}
                 />
-
-                {/* Badge for inbox */}
                 {tab.id === "inbox" && inboxCount > 0 && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
-                    style={{ background: "#ff0844" }}
+                    style={{ background: "#ff4d6d" }}
                   >
                     {inboxCount > 9 ? "9+" : inboxCount}
                   </motion.div>
                 )}
               </div>
-
-              <span
-                className={`text-[11px] font-semibold transition-colors duration-200 ${
-                  isActive ? "text-foreground" : "text-white/30"
-                }`}
-              >
+              <span className={`text-[11px] font-semibold transition-colors duration-200 ${isActive ? "text-foreground" : "text-white/30"}`}>
                 {tab.label}
               </span>
             </button>

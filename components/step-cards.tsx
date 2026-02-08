@@ -1,19 +1,18 @@
 "use client"
 
-import React from "react"
-
-import { useState, useCallback } from "react"
-import { Link, Send, Share2, Heart, Lock, Zap, Check, Gift, Users, Bell } from "lucide-react"
+import React, { useState, useCallback } from "react"
+import { Link, Share2, Heart, Lock, Zap, Gift, Bell, Check } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import Image from "next/image"
 
 interface ReceivedCard {
   id: string
-  senderHint: string
+  senderName: string
   message: string
   unlocksAt: Date
   color: string
+  isAnonymous: boolean
 }
 
 interface StepCardsProps {
@@ -27,14 +26,10 @@ function CopyButton({ text, onCopied }: { text: string; onCopied: () => void }) 
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      // fallback
-    }
+    try { await navigator.clipboard.writeText(text) } catch { /* fallback */ }
     setCopied(true)
     onCopied()
-    toast.success("Link copied to clipboard!")
+    toast.success("Ссылка скопирована!")
     setTimeout(() => setCopied(false), 2500)
   }, [text, onCopied])
 
@@ -42,8 +37,8 @@ function CopyButton({ text, onCopied }: { text: string; onCopied: () => void }) 
     <button
       type="button"
       onClick={handleCopy}
-      className="tap-effect relative flex min-h-[48px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-6 py-3 text-base font-bold transition-colors"
-      style={{ color: "#c2185b" }}
+      className="tap-effect relative flex min-h-[48px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-6 py-3 text-base font-bold"
+      style={{ color: "#800f2f" }}
     >
       {copied && (
         <motion.div
@@ -51,145 +46,127 @@ function CopyButton({ text, onCopied }: { text: string; onCopied: () => void }) 
           animate={{ x: "200%" }}
           transition={{ duration: 0.6 }}
           className="absolute inset-0 opacity-20"
-          style={{ background: "linear-gradient(90deg, transparent, #ff0844, transparent)" }}
+          style={{ background: "linear-gradient(90deg, transparent, #ff4d6d, transparent)" }}
         />
       )}
       {copied ? (
         <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-2">
           <Check className="h-5 w-5" />
-          Copied!
+          {"Скопировано!"}
         </motion.span>
       ) : (
         <>
           <Link className="h-5 w-5" />
-          Copy Link
+          {"Скопировать"}
         </>
       )}
     </button>
   )
 }
 
-function ShareButton({ onShare }: { onShare: () => void }) {
-  const handleShare = useCallback(async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Secret Valentine",
-          text: "Send me a Valentine card anonymously!",
-          url: "https://t.me/secretvalentine",
-        })
-        onShare()
-        toast.success("Shared successfully!")
-      } catch {
-        // user cancelled
-      }
-    } else {
-      onShare()
-      toast.success("Share link activated!")
-    }
-  }, [onShare])
-
-  return (
-    <button
-      type="button"
-      onClick={handleShare}
-      className="tap-effect flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-bold transition-colors"
-      style={{ color: "#2e7d32" }}
-    >
-      <Share2 className="h-5 w-5" />
-      Share
-    </button>
-  )
-}
-
-function CardFlip({ card }: { card: ReceivedCard }) {
-  const [flipped, setFlipped] = useState(false)
+/* Locked/Unlocked card in the inbox step */
+function ValentineCard({ card, index }: { card: ReceivedCard; index: number }) {
+  const [revealed, setRevealed] = useState(false)
   const now = new Date()
   const isUnlocked = now >= card.unlocksAt
 
+  const diff = card.unlocksAt.getTime() - now.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
   return (
     <motion.div
-      className="perspective-1000 relative h-24 w-full cursor-pointer"
-      onClick={() => isUnlocked && setFlipped(!flipped)}
+      initial={{ opacity: 0, x: -30 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.1 }}
     >
-      <motion.div
-        className="relative h-full w-full"
-        animate={{ rotateY: flipped ? 180 : 0 }}
-        transition={{ duration: 0.6, type: "spring", stiffness: 200 }}
-        style={{ transformStyle: "preserve-3d" }}
+      <button
+        type="button"
+        onClick={() => isUnlocked && setRevealed(!revealed)}
+        disabled={!isUnlocked}
+        className="tap-effect w-full text-left"
       >
-        {/* Front */}
         <div
-          className="backface-hidden absolute inset-0 flex items-center gap-3 rounded-xl px-4"
-          style={{ background: `${card.color}20`, border: `1px solid ${card.color}30` }}
-        >
-          <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-            style={{ background: `${card.color}30` }}
-          >
-            {isUnlocked ? (
-              <Heart className="h-5 w-5" style={{ fill: card.color, color: card.color }} />
-            ) : (
-              <Lock className="h-5 w-5 text-white/40" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white truncate">{card.senderHint}</p>
-            {isUnlocked ? (
-              <p className="text-xs text-white/60">Tap to reveal</p>
-            ) : (
-              <CountdownTimer target={card.unlocksAt} />
-            )}
-          </div>
-          {isUnlocked && (
-            <div className="animate-badge-pulse h-2.5 w-2.5 rounded-full bg-[#ff0844]" />
-          )}
-        </div>
-
-        {/* Back */}
-        <div
-          className="backface-hidden absolute inset-0 flex items-center gap-3 rounded-xl px-4"
+          className="relative overflow-hidden rounded-xl transition-all"
           style={{
-            background: `${card.color}20`,
-            border: `1px solid ${card.color}30`,
-            transform: "rotateY(180deg)",
+            background: isUnlocked
+              ? revealed ? `linear-gradient(135deg, ${card.color}, ${card.color}cc)` : `${card.color}18`
+              : "rgba(255,255,255,0.03)",
+            border: `1px solid ${isUnlocked ? `${card.color}30` : "rgba(255,255,255,0.06)"}`,
           }}
         >
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white">{card.senderHint}</p>
-            <p className="text-xs text-white/80 mt-0.5 line-clamp-2">{card.message}</p>
+          {/* Locked overlay */}
+          {!isUnlocked && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/40">
+              <Lock className="h-5 w-5 text-white/40" />
+              <span className="text-[11px] font-semibold text-white/40 tabular-nums">
+                {"Доступно с 14 февраля"}
+              </span>
+              <span className="text-[10px] text-white/25 tabular-nums">
+                {days > 0 && `${days}д `}{hours}ч {mins}м
+              </span>
+            </div>
+          )}
+
+          <div className={`flex items-center gap-3 p-4 ${!isUnlocked ? "locked-blur" : ""}`}>
+            <div
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${isUnlocked ? "animate-heartbeat" : ""}`}
+              style={{ background: isUnlocked ? `${card.color}30` : "rgba(255,255,255,0.05)" }}
+            >
+              <Heart className="h-5 w-5" style={{ fill: card.color, color: card.color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-bold ${revealed ? "text-white" : "text-foreground"}`}>
+                {card.isAnonymous ? "Тайный поклонник" : card.senderName}
+              </p>
+              <p className={`text-xs ${revealed ? "text-white/70" : "text-muted-foreground"}`}>
+                {revealed ? card.message : "Нажми, чтобы прочитать"}
+              </p>
+            </div>
+            {isUnlocked && !revealed && (
+              <div className="h-2.5 w-2.5 shrink-0 animate-badge-pulse rounded-full bg-[#ff4d6d]" />
+            )}
           </div>
-          <Heart className="h-6 w-6 shrink-0 animate-heartbeat" style={{ fill: card.color, color: card.color }} />
+
+          {/* Expanded message */}
+          <AnimatePresence>
+            {revealed && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="border-t border-white/10 px-4 py-3">
+                  <p className="text-sm text-white/90 leading-relaxed mb-2">{card.message}</p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toast.success("Ответ отправлен!")
+                    }}
+                    className="tap-effect rounded-lg bg-white/20 px-4 py-2 text-xs font-bold text-white"
+                  >
+                    {"Ответить"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </motion.div>
+      </button>
     </motion.div>
   )
 }
 
-function CountdownTimer({ target }: { target: Date }) {
-  const now = new Date()
-  const diff = target.getTime() - now.getTime()
-  if (diff <= 0) return <span className="text-xs text-[#ff6b81] font-semibold">Ready to open!</span>
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-  return (
-    <span className="text-[11px] text-white/40 tabular-nums">
-      {"Opens in "}
-      {days > 0 && `${days}d `}
-      {hours}h {mins}m
-    </span>
-  )
-}
-
 function StepCard({
-  step,
   completed,
   delay,
   gradient,
   children,
 }: {
-  step: number
   completed: boolean
   delay: number
   gradient: string
@@ -203,10 +180,7 @@ function StepCard({
       className="relative overflow-hidden rounded-2xl p-5"
       style={{ background: gradient }}
     >
-      {/* Corner ribbon */}
       <div className="ribbon-corner" />
-
-      {/* Completion checkmark */}
       {completed && (
         <motion.div
           initial={{ scale: 0 }}
@@ -216,7 +190,6 @@ function StepCard({
           <Check className="h-4 w-4 text-green-600" strokeWidth={3} />
         </motion.div>
       )}
-
       <div className="relative">{children}</div>
     </motion.div>
   )
@@ -225,155 +198,111 @@ function StepCard({
 export function StepCards({ referralLink, receivedCards, completedSteps, onCompleteStep }: StepCardsProps) {
   return (
     <div className="flex flex-col gap-4 px-4 pb-6">
-      {/* Step 1: Copy Link */}
-      <StepCard
-        step={1}
-        completed={completedSteps.has(1)}
-        delay={0.1}
-        gradient="linear-gradient(135deg, #ff0844, #c2185b)"
-      >
-        <h2 className="mb-1 text-lg font-extrabold text-white">Step 1: Copy Your Link</h2>
-        <p className="mb-3 text-sm text-white/70">Share it so friends can send you anonymous cards</p>
-        <p className="mb-3 truncate rounded-xl bg-black/20 px-3 py-2.5 text-xs text-white/80 font-mono">
-          {referralLink}
-        </p>
+      {/* Шаг 1 */}
+      <StepCard completed={completedSteps.has(1)} delay={0.1} gradient="linear-gradient(135deg, #800f2f, #c9184a)">
+        <h2 className="mb-1 text-lg font-extrabold text-white">{"Шаг 1: Скопируй свою ссылку"}</h2>
+        <p className="mb-3 text-sm text-white/70">{"Поделись ей, чтобы получать валентинки"}</p>
+        <p className="mb-3 truncate rounded-xl bg-black/20 px-3 py-2.5 text-xs text-white/80 font-mono">{referralLink}</p>
         <CopyButton text={referralLink} onCopied={() => onCompleteStep(1)} />
       </StepCard>
 
-      {/* Step 2: Share */}
-      <StepCard
-        step={2}
-        completed={completedSteps.has(2)}
-        delay={0.2}
-        gradient="linear-gradient(135deg, #2e7d32, #1b5e20)"
-      >
-        <h2 className="mb-1 text-lg font-extrabold text-white">Step 2: Share With Friends</h2>
-        <p className="mb-4 text-sm text-white/70">The more you share, the more love you get</p>
+      {/* Шаг 2 */}
+      <StepCard completed={completedSteps.has(2)} delay={0.2} gradient="linear-gradient(135deg, #2e7d32, #1b5e20)">
+        <h2 className="mb-1 text-lg font-extrabold text-white">{"Шаг 2: Поделись с друзьями"}</h2>
+        <p className="mb-4 text-sm text-white/70">{"С помощью неё друзья отправят тебе валентинки"}</p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => {
               onCompleteStep(2)
-              toast.success("Shared to Stories!")
+              toast.success("Опубликовано в Stories!")
             }}
-            className="tap-effect flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-base font-bold text-[#1b5e20] transition-colors"
+            className="tap-effect flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-base font-bold text-[#1b5e20]"
           >
             <Share2 className="h-5 w-5" />
-            Stories
+            {"Stories"}
           </button>
-          <ShareButton onShare={() => onCompleteStep(2)} />
+          <button
+            type="button"
+            onClick={async () => {
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: "Тайный Валентин",
+                    text: "Отправь мне анонимную валентинку!",
+                    url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME || "secretvalentinebot"}/app`,
+                  })
+                } catch { /* cancelled */ }
+              }
+              onCompleteStep(2)
+              toast.success("Ссылка отправлена!")
+            }}
+            className="tap-effect flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-base font-bold text-[#1b5e20]"
+          >
+            <Share2 className="h-5 w-5" />
+            {"Поделиться"}
+          </button>
         </div>
       </StepCard>
 
-      {/* Step 3: Received Cards (Inbox) */}
-      <StepCard
-        step={3}
-        completed={completedSteps.has(3)}
-        delay={0.3}
-        gradient="linear-gradient(135deg, #6a1b9a, #4a148c)"
-      >
-        <h2 className="mb-1 text-lg font-extrabold text-white">Step 3: Your Cards</h2>
-        <p className="mb-4 text-sm text-white/70">Tap unlocked cards to reveal the sender</p>
+      {/* Шаг 3 */}
+      <StepCard completed={completedSteps.has(3)} delay={0.3} gradient="linear-gradient(135deg, #6a1b9a, #4a148c)">
+        <h2 className="mb-1 text-lg font-extrabold text-white">{"Шаг 3: Отправь валентинки друзьям"}</h2>
+        <p className="mb-4 text-sm text-white/70">{"Раздели радость Дня Святого Валентина"}</p>
 
-        <AnimatePresence mode="wait">
-          {receivedCards.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-3 py-4"
+        {receivedCards.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-4">
+            <div className="relative h-16 w-16">
+              <Image src="/images/cupid.jpg" alt="Купидон" width={64} height={64} className="rounded-full opacity-60" />
+            </div>
+            <p className="text-center text-sm text-white/50">
+              {"Пока нет валентинок. Поделись ссылкой!"}
+            </p>
+            <button
+              type="button"
+              onClick={() => { onCompleteStep(3); toast("Буст активирован!") }}
+              className="tap-effect flex min-h-[48px] items-center gap-2 rounded-xl bg-white/15 px-6 py-3 text-sm font-bold text-white"
             >
-              <div className="relative h-16 w-16">
-                <Image
-                  src="/images/cupid.jpg"
-                  alt="Cupid waiting"
-                  width={64}
-                  height={64}
-                  className="rounded-full opacity-60"
-                />
-              </div>
-              <p className="text-center text-sm text-white/50">
-                No cards yet. Share your link and wait for Valentine surprises!
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  onCompleteStep(3)
-                  toast("Boost activated!", { description: "Your link will be promoted" })
-                }}
-                className="tap-effect flex min-h-[48px] items-center gap-2 rounded-xl bg-white/15 px-6 py-3 text-sm font-bold text-white transition-colors"
-              >
-                <Zap className="h-4 w-4" />
-                Boost Your Link
-              </button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="cards"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-2"
-            >
-              {receivedCards.map((card, i) => (
-                <motion.div
-                  key={card.id}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <CardFlip card={card} />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <Zap className="h-4 w-4" />
+              {"Выбрать друга"}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {receivedCards.map((card, i) => (
+              <ValentineCard key={card.id} card={card} index={i} />
+            ))}
+          </div>
+        )}
       </StepCard>
 
-      {/* Step 4: Giveaway */}
-      <StepCard
-        step={4}
-        completed={completedSteps.has(4)}
-        delay={0.4}
-        gradient="linear-gradient(135deg, #f57c00, #e65100)"
-      >
-        <h2 className="mb-1 text-lg font-extrabold text-white">Step 4: Valentine Giveaway</h2>
+      {/* Шаг 4 */}
+      <StepCard completed={completedSteps.has(4)} delay={0.4} gradient="linear-gradient(135deg, #f57c00, #e65100)">
+        <h2 className="mb-1 text-lg font-extrabold text-white">{"Шаг 4: Участвуй в розыгрыше"}</h2>
         <p className="mb-4 text-sm text-white/70">
-          {"Send cards to friends and win prizes on Valentine's Day"}
+          {"Поздравь друзей и забери топовые призы 14 февраля"}
         </p>
         <button
           type="button"
-          onClick={() => {
-            onCompleteStep(4)
-            toast.success("You joined the giveaway!", { description: "Winners announced Feb 14" })
-          }}
-          className="tap-effect flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-bold text-[#e65100] transition-colors"
+          onClick={() => { onCompleteStep(4); toast.success("Ты участвуешь в розыгрыше!") }}
+          className="tap-effect flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-bold text-[#e65100]"
         >
           <Gift className="h-5 w-5" />
-          Join Giveaway
+          {"Участвовать в розыгрыше"}
         </button>
       </StepCard>
 
-      {/* Step 5: Subscribe */}
-      <StepCard
-        step={5}
-        completed={completedSteps.has(5)}
-        delay={0.5}
-        gradient="linear-gradient(135deg, #1565c0, #0d47a1)"
-      >
-        <h2 className="mb-1 text-lg font-extrabold text-white">Step 5: Follow Us</h2>
-        <p className="mb-4 text-sm text-white/70">Stay updated with Secret Valentine news</p>
+      {/* Шаг 5 */}
+      <StepCard completed={completedSteps.has(5)} delay={0.5} gradient="linear-gradient(135deg, #1565c0, #0d47a1)">
+        <h2 className="mb-1 text-lg font-extrabold text-white">{"Шаг 5: Подпишись на наш канал"}</h2>
+        <p className="mb-4 text-sm text-white/70">{"Следи за новостями Тайного Валентина"}</p>
         <button
           type="button"
-          onClick={() => {
-            onCompleteStep(5)
-            toast.success("Subscribed!", { description: "You'll receive Valentine updates" })
-          }}
-          className="tap-effect flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-bold text-[#0d47a1] transition-colors"
+          onClick={() => { onCompleteStep(5); toast.success("Подписка оформлена!") }}
+          className="tap-effect flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-bold text-[#0d47a1]"
         >
           <Bell className="h-5 w-5" />
-          Subscribe to Channel
+          {"Подписаться на канал"}
         </button>
       </StepCard>
     </div>

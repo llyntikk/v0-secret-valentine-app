@@ -7,8 +7,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
-  title: "Secret Valentine",
-  description: "Send and receive anonymous Valentine cards from friends",
+  title: "Тайный Валентин",
+  description: "Отправляй и получай анонимные валентинки от друзей",
   manifest: "/manifest.json",
 }
 
@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#120101",
+  themeColor: "#0a0a0a",
 }
 
 export default function RootLayout({
@@ -25,14 +25,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru" className="bg-[#120101]">
+    <html lang="ru" className="bg-[#0a0a0a]">
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Toaster
           position="top-center"
           toastOptions={{
             style: {
-              background: "rgba(30, 5, 5, 0.95)",
+              background: "rgba(20, 8, 12, 0.95)",
               border: "1px solid rgba(255,255,255,0.08)",
               color: "#fafafa",
               backdropFilter: "blur(20px)",

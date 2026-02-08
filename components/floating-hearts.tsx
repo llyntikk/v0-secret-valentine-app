@@ -15,13 +15,12 @@ interface Particle {
   variant: "normal" | "reverse"
 }
 
+const HEART_COLORS = ["#800f2f", "#ff4d6d", "#c9184a", "#ff758f", "#590d22"]
+
 function HeartSVG({ size, opacity, color }: { size: number; opacity: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity }}>
-      <path
-        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-        fill={color}
-      />
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill={color} />
     </svg>
   )
 }
@@ -29,10 +28,7 @@ function HeartSVG({ size, opacity, color }: { size: number; opacity: number; col
 function SparkleSVG({ size, opacity }: { size: number; opacity: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity }}>
-      <path
-        d="M12 2L13.5 9.5L21 12L13.5 14.5L12 22L10.5 14.5L3 12L10.5 9.5L12 2Z"
-        fill="#ffd700"
-      />
+      <path d="M12 2L13.5 9.5L21 12L13.5 14.5L12 22L10.5 14.5L3 12L10.5 9.5L12 2Z" fill="#ffd700" />
     </svg>
   )
 }
@@ -45,25 +41,21 @@ function PetalSVG({ size, opacity }: { size: number; opacity: number }) {
   )
 }
 
-const HEART_COLORS = ["#ff0844", "#e91e63", "#ff4081", "#ff6b81", "#c2185b"]
-
 export function FloatingHearts() {
   const [particles, setParticles] = useState<Particle[]>([])
 
   useEffect(() => {
-    const generated: Particle[] = Array.from({ length: 20 }, (_, i) => {
-      const types: ParticleType[] = ["heart", "heart", "sparkle", "petal", "heart"]
-      return {
-        id: i,
-        type: types[i % types.length],
-        left: Math.random() * 100,
-        size: Math.random() * 14 + 6,
-        duration: Math.random() * 14 + 10,
-        delay: Math.random() * 15,
-        opacity: Math.random() * 0.35 + 0.08,
-        variant: i % 3 === 0 ? "reverse" : "normal",
-      }
-    })
+    const types: ParticleType[] = ["heart", "heart", "sparkle", "petal", "heart"]
+    const generated: Particle[] = Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      type: types[i % types.length],
+      left: Math.random() * 100,
+      size: Math.random() * 14 + 6,
+      duration: Math.random() * 14 + 10,
+      delay: Math.random() * 15,
+      opacity: Math.random() * 0.3 + 0.05,
+      variant: i % 3 === 0 ? "reverse" : "normal",
+    }))
     setParticles(generated)
   }, [])
 
@@ -73,19 +65,9 @@ export function FloatingHearts() {
         <div
           key={p.id}
           className={`absolute bottom-0 ${p.variant === "reverse" ? "animate-float-up-reverse" : "animate-float-up"}`}
-          style={{
-            left: `${p.left}%`,
-            animationDuration: `${p.duration}s`,
-            animationDelay: `${p.delay}s`,
-          }}
+          style={{ left: `${p.left}%`, animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s` }}
         >
-          {p.type === "heart" && (
-            <HeartSVG
-              size={p.size}
-              opacity={p.opacity}
-              color={HEART_COLORS[p.id % HEART_COLORS.length]}
-            />
-          )}
+          {p.type === "heart" && <HeartSVG size={p.size} opacity={p.opacity} color={HEART_COLORS[p.id % HEART_COLORS.length]} />}
           {p.type === "sparkle" && <SparkleSVG size={p.size * 0.8} opacity={p.opacity * 0.7} />}
           {p.type === "petal" && <PetalSVG size={p.size * 1.2} opacity={p.opacity * 0.6} />}
         </div>
